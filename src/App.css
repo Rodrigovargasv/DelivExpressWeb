@@ -1,0 +1,51 @@
+.container {
+  display: flex;
+
+}
+
+.container h2{
+  text-align: center;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+}
+
+.logo {
+  width: 90px;
+  height: 90px;
+  padding: 7px;
+}
+
+.header-container {
+  text-align: center;
+}
+
+.header-container .btn-incluir {
+  width: 250px;
+  margin: 20px;
+}
+
+
+.button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.button-container button {
+  margin-right: 5px;
+}
+
+.button-container button.btn-primary {
+  /* Estilos adicionais para o botão "Editar" */
+}
+
+.button-container button.btn-danger {
+  /* Estilos adicionais para o botão "Excluir" */
+}
+
+.error-message {
+  color: red;
+}
+
