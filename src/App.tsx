@@ -5,6 +5,8 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import logoCadastro from './assets/lista-de-tarefas.png'
 import axios from 'axios';
 
+
+
 interface FormValues {
   nome: string;
   descricao: string;
@@ -33,9 +35,9 @@ interface FormProduct {
 function App() {
 
   const [produtos, setDate] = useState<any[]>([{}])
-  const [produtoId, setProdutoId] = useState<any[]>([{}])
   const [modalIncluir, setIsOpen] = useState(false)
   const [modalEditar, setIsOpenModal] = useState(false)
+  const [modalDelete, setIsDeletenModal] = useState(false)
 
   const [formValues, setFormValues] = useState<FormValues>({
     nome: '',
@@ -44,7 +46,7 @@ function App() {
     estoque: 0,
     imageUrl: ''
   });
-  const [valueFormPorduct, setvalueFormPorduct] = useState<FormProduct>({
+  const [formValuesEditar, setFormValuesEditar] = useState<FormProduct>({
     id: 0,
     nome: '',
     descricao: '',
@@ -52,50 +54,34 @@ function App() {
     estoque: 0,
     imageUrl: ''
   });
+
   const [formErrors, setFormErrors] = useState<FormErrors>({
-    nome: ' ',
-    descricao: ' ',
-    preco: ' ',
-    estoque: ' ',
-    imageUrl: ' '
+    nome: '',
+    descricao: '',
+    preco: '',
+    estoque: '',
+    imageUrl: ''
   });
 
 
-  const fetchProductById = async (productId: number) => {
+  function ProductGetById(productId: number) {
 
-    // const resp = await axios.get(`http://localhost:5155/api/Produtos/${productId}`);
+    axios.get(`http://localhost:5155/api/Produtos/${productId}`)
+      .then(response => {
+        // Sucesso na requisição
+        const product = response.data;
+        setFormValuesEditar(product)
 
-    const fetchProdutos = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5155/api/Produtos/${productId}`);
-        const fetchedData = response.data;
-        console.log(fetchedData)
-        const { id, nome, descricao, preco, estoque, imageUrl } = fetchedData;
-        setvalueFormPorduct({
-          id,
-          nome,
-          descricao,
-          preco,
-          estoque,
-          imageUrl
-        })
-       
-      } catch (error) {
-        console.log(error);
-      }
-    }
-    fetchProdutos();
+      })
+      .catch(error => {
+        // Erro na requisição
+        console.error('Erro ao buscar o produto:', error);
+      });
 
   }
 
-
-  const handleProductClick = (productId: number) => {
-    fetchProductById(productId);
-  };
-
-
   // busca por todos os produtos
-  function ProdutoGet() {
+  function GetAllProducts() {
 
     useEffect(() => {
       const fetchProdutos = async () => {
@@ -112,10 +98,11 @@ function App() {
       fetchProdutos();
     }, []);
   }
-  ProdutoGet();
+  GetAllProducts();
+
 
   // cria um novo produto
-  const produtoPost = async () => {
+  const productCreate = async () => {
 
     const errors: FormErrors = {
       nome: '',
@@ -125,12 +112,13 @@ function App() {
       imageUrl: ''
     };
 
+
     if (formValues.nome === '') {
       errors.nome = 'O campo nome é obrigatório.';
       setFormErrors(errors);
 
     }
-    else if (formValues.nome.length <= 3) {
+    else if (formValues.nome.length < 3) {
       errors.nome = 'O campo nome deve ter no mínimo 3 caracteres.'
       setFormErrors(errors);
 
@@ -139,15 +127,18 @@ function App() {
       errors.descricao = 'O campo descrição é obrigatório.'
       setFormErrors(errors);
 
+
     }
     if (formValues.estoque.toString() === '') {
       errors.estoque = 'O campo nome é obrigatório.';
       setFormErrors(errors);
 
+
     }
     if (formValues.preco < 0) {
       errors.preco = 'Valor do campo não pode ser menor que zero'
       setFormErrors(errors);
+
 
     }
     if (formValues.imageUrl === '') {
@@ -156,18 +147,25 @@ function App() {
 
     }
     else if (formValues.imageUrl.length < 5) {
-      errors.imageUrl = 'O campo imageUrL deve ter no mínimo 5 caracteres.'
+      errors.imageUrl = 'O campo imageUrl deve ter no mínimo 5 caracteres.'
       setFormErrors(errors);
+    }
+    else {
+      setFormErrors(errors)
+      var verfica = Object.values(errors).some(value => value !== '')
+      if (!verfica) {
+        console.log(formValues)
+        await axios.post('http://localhost:5155/api/Produtos', formValues);
+        handleCloseFormAdd()
 
-    } else {
-      const response = await axios.post('http://localhost:5155/api/Produtos', formValues);
-      console.log(response.data);
+      }
+
     }
 
   }
 
   // atuliza um produtos
-  const produtoPut = async () => {
+  const productUpdate = async () => {
 
 
     const errors: FormErrors = {
@@ -178,47 +176,61 @@ function App() {
       imageUrl: ''
     };
 
-    if (formValues.nome === '') {
+
+    if (formValuesEditar.nome === '') {
       errors.nome = 'O campo nome é obrigatório.';
       setFormErrors(errors);
 
     }
-    else if (formValues.nome.length <= 3) {
+    else if (formValuesEditar.nome.length < 3) {
       errors.nome = 'O campo nome deve ter no mínimo 3 caracteres.'
       setFormErrors(errors);
 
     }
-    if (formValues.descricao === '') {
+    if (formValuesEditar.descricao === '') {
       errors.descricao = 'O campo descrição é obrigatório.'
       setFormErrors(errors);
 
+
     }
-    if (formValues.estoque.toString() === '') {
+    if (formValuesEditar.estoque.toString() === '') {
       errors.estoque = 'O campo nome é obrigatório.';
       setFormErrors(errors);
 
+
     }
-    if (formValues.preco < 0) {
+    if (formValuesEditar.preco < 0) {
       errors.preco = 'Valor do campo não pode ser menor que zero'
       setFormErrors(errors);
 
+
     }
-    if (formValues.imageUrl === '') {
+    if (formValuesEditar.imageUrl === '') {
       errors.imageUrl = 'O campo imageUrl é obrigatório.'
       setFormErrors(errors);
 
     }
-    else if (formValues.imageUrl.length < 5) {
-      errors.imageUrl = 'O campo imageUrL deve ter no mínimo 5 caracteres.'
+    else if (formValuesEditar.imageUrl.length < 5) {
+      errors.imageUrl = 'O campo imageUrl deve ter no mínimo 5 caracteres.'
       setFormErrors(errors);
-
-    } else {
-      const response = await axios.put('http://localhost:5155/api/Produtos', formValues);
-      console.log(response.data);
     }
-  };
+    else {
+      setFormErrors(errors)
+      var verfica = Object.values(errors).some(value => value !== '')
+      if (!verfica) {
+        axios.put(`http://localhost:5155/api/Produtos/${formValuesEditar.id}`, formValuesEditar)
+        handleCloseFormEdit();
 
+      }
+    };
+  }
 
+  const productDelete = async () => {
+    axios.delete(`http://localhost:5155/api/Produtos/${formValuesEditar.id}`)
+    handleFormDeleteClose()
+    
+    
+  }
   // abre o formulário de inclusão de produtos
   const handleOpenFormAdd = () => {
     setIsOpen(true);
@@ -227,20 +239,30 @@ function App() {
   // fecha o formulário de inclusão de produtos
   const handleCloseFormAdd = () => {
     setIsOpen(false)
+    window.location.reload();
   };
 
   // abre o formulário de edição
-  const handleOpenFormEdit = () => {
-
+  const handleOpenFormEdit = (productId: number) => {
+    ProductGetById(productId);
     setIsOpenModal(true);
   };
 
-  // fecha o formulário de edição
-  const handleCloseFormEdit
-    = () => {
 
-      setIsOpenModal(false)
-    };
+  // fecha o formulário de edição
+  const handleCloseFormEdit = () => {
+    setIsOpenModal(false)
+    window.location.reload();
+  };
+
+  const handleFormDelete = (productId: number) => {
+    ProductGetById(productId);
+    setIsDeletenModal(true)
+  } 
+  const handleFormDeleteClose = () => {
+    setIsDeletenModal(false)
+    window.location.reload();
+  }
 
 
   const handleChange = (event: { target: { name: any; value: any; }; }) => {
@@ -250,8 +272,13 @@ function App() {
       [name]: value
     }));
   };
-
-
+  const handleChangeEdit = (event: { target: { name: any; value: any; }; }) => {
+    const { name, value } = event.target;
+    setFormValuesEditar((prevValues) => ({
+      ...prevValues,
+      [name]: value
+    }));
+  };
 
 
   return (
@@ -275,15 +302,15 @@ function App() {
           </thead>
           <tbody>
             {produtos.map((prod) => (
-              <tr key={prod.id} onClick={() => handleProductClick(prod.id)}>
+              <tr key={prod.id}>
                 <th scope="row">{prod.id}</th>
                 <td className="col-7">{prod.nome}</td>
                 <td className='col-2'>{prod.preco}</td>
                 <td className='col-10'>{prod.estoque}</td>
                 <td>
                   <div className="button-container">
-                    <button className='btn btn-primary' onClick={handleOpenFormEdit}>Editar</button>
-                    <button className='btn btn-danger'>Excluir</button>
+                    <button className='btn btn-primary' onClick={() => handleOpenFormEdit(prod.id)}>Editar</button>
+                    <button className='btn btn-danger' onClick={() => handleFormDelete(prod.id)}>Excluir</button>
                   </div>
                 </td>
               </tr>
@@ -324,7 +351,7 @@ function App() {
             </form>
           </ModalBody>
           <ModalFooter>
-            <button className="btn btn-primary" onClick={produtoPost}>Incluir</button>{"   "}
+            <button className="btn btn-primary" onClick={productCreate}>Incluir</button>{"   "}
             <button className="btn btn-danger" onClick={handleCloseFormAdd} >Cancelar</button>
           </ModalFooter>
         </Modal>
@@ -337,40 +364,54 @@ function App() {
 
               <label>ID: </label>
               <br />
-              <input className="form-control form-control-plaintext bg-light " readOnly value={valueFormPorduct.id} />
+              <input className="form-control form-control-plaintext bg-light " readOnly value={formValuesEditar.id} />
               <br />
               <label>Nome: </label>
               <br />
-              <input type="text" className="form-control" name="nome" value={valueFormPorduct.nome} onChange={handleChange} />
+              <input type="text" className="form-control" name='nome' value={formValuesEditar.nome} onChange={handleChangeEdit} />
               {formErrors.nome && <span className="error-message">{formErrors.nome}</span>}
               <br />
               <label>Descriçao: </label>
               <br />
-              <input type="text" className="form-control" name="descricao" value={""} onChange={handleChange} />
+              <input type="text" className="form-control" name="descricao" value={formValuesEditar.descricao} onChange={handleChangeEdit} />
               {formErrors.descricao && <span className="error-message">{formErrors.descricao}</span>}
               <br />
               <label>Preço: </label>
               <br />
-              <input type="number" className="form-control" name="preco" value={""} onChange={handleChange} />
+              <input type="number" className="form-control" name="preco" value={formValuesEditar.preco} onChange={handleChangeEdit} />
               {formErrors.preco && <span className="error-message">{formErrors.preco}</span>}
               <br />
               <label>Estoque: </label>
               <br />
-              <input type="number" className="form-control" name="estoque" value={''} onChange={handleChange} />
+              <input type="number" className="form-control" name="estoque" value={formValuesEditar.estoque} onChange={handleChangeEdit} />
               {formErrors.estoque && <span className="error-message">{formErrors.estoque}</span>}
               <br />
               <label>Image: </label>
               <br />
-              <input type="text" className="form-control" name="imageUrl" value={""} onChange={handleChange} />
+              <input type="text" className="form-control" name="imageUrl" value={formValuesEditar.imageUrl} onChange={handleChangeEdit} />
               {formErrors.imageUrl && <span className="error-message">{formErrors.imageUrl}</span>}
               <br />
             </form>
           </ModalBody>
           <ModalFooter>
-            <button className="btn btn-primary" onClick={produtoPut}>Incluir</button>
+            <button className="btn btn-primary" onClick={productUpdate}>Incluir</button>
             <button className="btn btn-danger" onClick={handleCloseFormEdit} >Cancelar</button>
           </ModalFooter>
         </Modal>
+
+
+        <Modal isOpen={modalDelete}>
+          <ModalBody>
+            
+              <p className="text-center" style={{ fontWeight: 'bold', fontSize: '16px' }}>Tem certeza que deseja excluir o produto?</p>
+          
+          </ModalBody>
+          <ModalFooter>
+            <button className="btn btn-danger" onClick={productDelete}>Excluir</button>
+            <button className="btn btn-secondary" onClick={handleFormDeleteClose}>Cancelar</button>
+          </ModalFooter>
+        </Modal>
+
       </div>
     </div>
   )
